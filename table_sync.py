@@ -1,5 +1,5 @@
 import gspread
-import csv
+import sqlite3
 from oauth2client.service_account import ServiceAccountCredentials
 import time
 
@@ -7,13 +7,15 @@ import time
 json_keyfile_path = "creds.json"
 
 # ID Google-таблицы
-spreadsheet_id = "14rl2igwXTpJyJR14EQrfxZEtFepFxMkrzHVPCBzF4Yo"
+spreadsheet_id = "***************"
 
-# Функция для обновления локального файла
-def update_local_file():
+# Путь к файлу базы данных SQLite
+db_file_path = "/root/database/tourbot.db"
+
+# Функция для обновления базы данных SQLite
+def update_database():
     # Авторизация и доступ к Google Sheets API
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets",
-             "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+    scope = ["***************"]
     credentials = ServiceAccountCredentials.from_json_keyfile_name(json_keyfile_path, scope)
     client = gspread.authorize(credentials)
 
@@ -24,17 +26,29 @@ def update_local_file():
     # Получение данных из Google-таблицы
     data = sheet.get_all_values()
 
-    # Запись данных в файл CSV
-    csv_file_path = "/root/vicbot/victory_tour/data_tour.csv"
-    with open(csv_file_path, "w", newline="") as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerows(data)
+    # Обновление базы данных SQLite
+    connection = sqlite3.connect(db_file_path)
+    cursor = connection.cursor()
+
+    # Очистка существующих данных в таблице базы данных
+    cursor.execute("DELETE FROM data_tour")
+
+    # Вставка новых данных в таблицу базы данных
+    for row in data:
+        print(row)
+        cursor.execute("INSERT INTO data_tour VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", row[:-1])
+
+
+
+    # Применение изменений и закрытие соединения с базой данных
+    connection.commit()
+    connection.close()
 
     # Вывод времени обновления
-    print("Файл успешно обновлен. Время обновления:", time.ctime())
+    print("База данных успешно обновлена. Время обновления:", time.ctime())
 
-# Обновление файла с определенной периодичностью
+# Обновление базы данных каждый час
 while True:
-    update_local_file()
-    # Интервал обновления в секундах (например, каждые 4 часа = 4 * 60 * 60)
-    time.sleep(4 * 60 * 60)
+    update_database()
+    # Интервал обновления в секундах (каждый час = 1 * 60 * 60)
+    time.sleep(1 * 60 * 60)
