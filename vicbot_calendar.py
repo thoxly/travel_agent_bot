@@ -65,7 +65,7 @@ def inline_handler(update: Update, context):
 
 
 def main():
-    updater = Updater(token='6270034863:AAGE4WL6G92vwEalnRg_FoQFWYkZtURfyX4', use_context=True)
+    updater = Updater(token='*******************', use_context=True)
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CallbackQueryHandler(inline_handler))
