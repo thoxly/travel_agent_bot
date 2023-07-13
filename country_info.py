@@ -24,7 +24,7 @@ def country_topic(update: Update, context: CallbackContext) -> int:
     query = update.callback_query
     country = query.data
 
-    document_path = f"/root/vicbot/victory_tour/memo/{country}.docx"
+    document_path = f"/Users/glebperevalov/Desktop/Victory_tour/memo/{country}.docx"
 
     if os.path.exists(document_path):
         # Отправляем документ пользователю
