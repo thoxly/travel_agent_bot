@@ -1,18 +1,15 @@
 import pandas as pd
 import numpy as np
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, Poll
-from telegram.ext import Updater, CommandHandler, CallbackContext, ConversationHandler, CallbackQueryHandler, MessageHandler, Filters, CommandHandler
-from telegram import ParseMode
+import sqlite3
+from telegram import Update, ParseMode
+from telegram.ext import Updater, CommandHandler, CallbackContext, ConversationHandler, MessageHandler, Filters
 
-
-TOUR_ID = 12  # Объявите TOUR_ID перед использованием
+TOUR_ID = 12  
 
 def start_tour_info(update: Update, context: CallbackContext) -> int:
-    # прерываем текущий обработчик, если он существует
     if 'current_handler' in context.user_data and context.user_data['current_handler'] != 'tour_info':
         return ConversationHandler.END
 
-    # устанавливаем текущий обработчик
     context.user_data['current_handler'] = 'tour_info'
 
     context.user_data.clear()
@@ -23,30 +20,44 @@ def start_tour_info(update: Update, context: CallbackContext) -> int:
 
 def handle_tour_id(update: Update, context: CallbackContext) -> int:
     input_text = update.message.text
-    df = pd.read_csv("/root/vicbot/victory_tour/data_tour.csv")
 
-    df['phone_number'].replace('nan', np.nan, inplace=True)  # заменяем строки 'nan' на фактические NaN значения
-    
-    row = df[df['phone_number'].astype(str).str.contains(input_text)].tail(1)
+    # Connect to the SQLite database
+    connection = sqlite3.connect('/root/database/tourbot.db')
+    cursor = connection.cursor()
 
-    if row.empty:
+    cursor.execute("SELECT * FROM data_tour WHERE phone_number = ?", (input_text,))
+    row = cursor.fetchone()
+
+    if row is None:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Ваша заявка не найдена. Попробуйте ввести номер еще раз.")
-        return TOUR_ID  # возвращаемся в то же состояние, чтобы спросить номер тура снова
+        connection.close()
+        return TOUR_ID
     else:
-        text = f"Уважаемый(-ая), {row['addressing _name'].values[0]}!\n" \
-               f"Дата начала вашего тура: {row['date_start'].values[0]}\n" \
-               f"Количество ночей: {row['number_of_nights'].values[0]}\n" \
-               f"Страна: {row['country'].values[0]}\n" \
-               f"Город: {row['city'].values[0]}\n" \
-               f"Название отеля: {row['hotel'].values[0]}\n" \
-               f"По текущему курсу туроператора ({row['current_rate'].values[0]}) нужно доплатить: {row['to_be_pay_RUR'].values[0]} руб.\n"
+        addressing_name = row[4]
+        date_start = row[10]
+        number_of_nights = row[11]
+        country = row[8]
+        city = row[7]
+        hotel = row[6]
+        current_rate = row[19]
+        to_be_pay_rur = row[17]
+
+        text = f"Уважаемый(-ая), {addressing_name}!\n" \
+               f"Дата начала вашего тура: {date_start}\n" \
+               f"Количество ночей: {number_of_nights}\n" \
+               f"Страна: {country}\n" \
+               f"Город: {city}\n" \
+               f"Название отеля: {hotel}\n" \
+               f"По текущему курсу туроператора {current_rate} нужно доплатить: {to_be_pay_rur} руб.\n"
+
         context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        connection.close()
 
         return ConversationHandler.END
 
 def cancel(update: Update, context: CallbackContext) -> int:
     context.bot.send_message(chat_id=update.effective_chat.id, text="Вы вернулись в главное меню, выберите команду, нажав на синюю кнопку в левом нижнем углу")
-    return ConversationHandler.END  
+    return ConversationHandler.END
 
 def get_tour_info_conversation_handler() -> ConversationHandler:
     return ConversationHandler(
