@@ -34,7 +34,10 @@ def departure(update: Update, context: CallbackContext) -> int:
         [InlineKeyboardButton("Москва", callback_data='moscow'), InlineKeyboardButton("Питер", callback_data='peter')],
         [InlineKeyboardButton("МинВоды", callback_data='mineral_waters'), InlineKeyboardButton("Уфа", callback_data='ufa')], 
         [InlineKeyboardButton("Казань", callback_data='kazan'), InlineKeyboardButton("Новосибирск", callback_data='novosib')],
-        [InlineKeyboardButton("Круиз", callback_data='cruise'), InlineKeyboardButton("Без перелета", callback_data='no_fly')]
+        [InlineKeyboardButton("Cочи", callback_data='sochi'), InlineKeyboardButton("ЕКБ", callback_data='ekb')],
+        [InlineKeyboardButton("Ставрополь", callback_data='stavropol'), InlineKeyboardButton("Н.Новгород", callback_data='nnov')],
+        [InlineKeyboardButton("Круиз", callback_data='cruise'), InlineKeyboardButton("Без перелета", callback_data='no_fly')],
+        
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     context.bot.send_message(chat_id=update.effective_chat.id, text="2️⃣ из 7️⃣ \n\nОткуда летим? ✈️", reply_markup=reply_markup)
@@ -53,7 +56,6 @@ def destination(update: Update, context: CallbackContext) -> int:
     reply_markup = InlineKeyboardMarkup(keyboard)
     context.bot.send_message(chat_id=update.effective_chat.id, text="3️⃣ из 7️⃣ \n\nГде будем отдыхать? ✈️ ", reply_markup=reply_markup)
     return DATES 
-
 
 def dates(update: Update, context: CallbackContext) -> int:
     query = update.callback_query
